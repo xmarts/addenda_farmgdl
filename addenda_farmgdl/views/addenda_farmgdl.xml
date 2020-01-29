@@ -12,7 +12,7 @@
           <uniqueCreatorIdentification t-esc="serie+folio"/>
         </requestForPaymentIdentification>
         <orderIdentification>
-          <referenceIdentification type="ON" t-field="record.fields_sales.number_order"/>
+          <referenceIdentification type="ON" t-field="record.pos_order_id.number_order"/>
         </orderIdentification>
         <buyer>
           <gln t-field="record.partner_id.gln"/>
