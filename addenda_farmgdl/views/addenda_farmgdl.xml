@@ -12,20 +12,20 @@
           <uniqueCreatorIdentification t-esc="serie+folio"/>
         </requestForPaymentIdentification>
         <orderIdentification>
-          <referenceIdentification type="ON" t-field="record.pos_order_id.number_order"/>
+          <referenceIdentification type="ON" t-field="record.fields_sales.number_order"/>
         </orderIdentification>
         <buyer>
           <gln t-field="record.partner_id.gln"/>
-          <t t-set="namcomercial" t-value="0" />
+          <t t-set="namcomercial" t-value="0"/>
           <t t-foreach="record.partner_id.child_ids" t-as="child">
             <t t-if="child.type == 'contact'">
-              <contactInformation t-esc="child.name" />
+              <contactInformation t-esc="child.name"/>
             </t>
             <t t-else="">
               <contactInformation/>
             </t>
           </t>
-          <t t-set="valcont" t-value="" />
+          <t t-set="valcont" t-value=""/>
         </buyer>
         <seller>
           <t t-set="numprov" t-value="record.partner_id.number_provideer"/>
@@ -63,11 +63,11 @@
           <rateOfChange>1</rateOfChange>
         </currency>
         <t t-set="cont" t-value="0"/>
-        <t t-set="valprecre" t-value="0" />
+        <t t-set="valprecre" t-value="0"/>
         <t t-foreach="record.fields_sales.order_line" t-as="rec">
           <t t-foreach="xml.Conceptos.Concepto" t-as="rc">
-            <t t-if="rc.get('NoIdentificacion') == rec.product_id.default_code" >
-              <t t-set="valprecre" t-value="rc.get('ValorUnitario')" />
+            <t t-if="rc.get('NoIdentificacion') == rec.product_id.default_code">
+              <t t-set="valprecre" t-value="rc.get('ValorUnitario')"/>
             </t>
           </t>
           <t t-set="cont" t-value="cont + 1"/>
@@ -139,11 +139,11 @@
         </TotalAllowanceCharge>
         <baseAmount>
           <t t-set="valamount" t-value="0"/>
-          <t t-set="valprecrecd" t-value="0" />
+          <t t-set="valprecrecd" t-value="0"/>
           <t t-foreach="record.fields_sales.order_line" t-as="rec">
             <t t-foreach="xml.Conceptos.Concepto" t-as="rc">
-              <t t-if="rc.get('NoIdentificacion') == rec.product_id.default_code" >
-                <t t-set="valprecrecd" t-value="rc.get('ValorUnitario')" />
+              <t t-if="rc.get('NoIdentificacion') == rec.product_id.default_code">
+                <t t-set="valprecrecd" t-value="rc.get('ValorUnitario')"/>
               </t>
             </t>
             <t t-foreach="rec.tax_id" t-as="tac">
