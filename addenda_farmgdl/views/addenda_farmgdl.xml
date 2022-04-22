@@ -1,190 +1,165 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
-  <data noupdate="0">
-    <template id="addenda_farmgdl" name="Farmacia Guadalajara codigo">
-    <t t-if="record.type == 'out_invoice'">
-     <t t-set="xml" t-value="record.l10n_mx_edi_get_xml_etree()"/>
-      <t t-set="dateformat" t-value="xml.get('Fecha')"/>
-      <requestForPayment xmlns="http://www.farmaciasguadalajara.com.mx/AddendaFragua" t-att-DeliveryDate="dateformat" type="SimpleInvoiceType" contentVersion="1.3.1" documentStructureVersion="AMC006" documentStatus="ORIGINAL">
-        <requestForPaymentIdentification>
-          <entityType>INVOICE</entityType>
-          <t t-set="serie" t-value="xml.get('Serie')"/>
-          <t t-set="folio" t-value="xml.get('Folio')"/>
-          <uniqueCreatorIdentification t-esc="serie+folio"/>
-        </requestForPaymentIdentification>
-        <orderIdentification>
-          <referenceIdentification type="ON" t-field="record.fields_sales.number_order"/>
-        </orderIdentification>
-        <buyer>
-          <!--<gln t-field="record.partner_id.gln"/>-->
-          <!--<t t-set="namcomercial" t-value="0"/>-->
-          <!--<t t-foreach="record.partner_id.child_ids" t-as="child">-->
-          <!--  <t t-if="child.type == 'contact'">-->
-          <!--    <contactInformation t-esc="child.name"/>-->
-          <!--  </t>-->
-          <!--  <t t-else="">-->
-          <!--    <contactInformation/>-->
-          <!--  </t>-->
-          <!--</t>-->
-          <!--<t t-set="valcont" t-value=""/>-->
-          <gln t-field="record.partner_shipping_id.shipping_gln"/>
-          <contactInformation/>
-        </buyer>
-        <seller>
-          <t t-set="numprov" t-value="record.partner_shipping_id.shipping_number_provider"/>
-          <alternatePartyIdentification type="SELLER_ASSIGNED_IDENTIFIER_FOR_A_PARTY" t-esc="numprov"/>
-        </seller>
-        <shipTo>
-          <t t-set="validtag" t-value="0"/>
-          <!--<t t-if="record.partner_id.type_suc == False" >
-            <t t-set="validtag" t-value="validtag + 1" />
-            <t t-set="identification" t-value="''"/>
-          </t>
-          <t t-else="" >
-            <t t-set="identification" t-value="record.partner_id.type_suc"/>
-          </t>
-          <t t-set="number" t-value="''" />
-          <t t-if="record.partner_id.number_sucursal == False" >
-            <t t-set="validtag" t-value="validtag + 1" />
-            <t t-set="number" t-value="''" />
-          </t>
-          <t t-else="" >
-            <t t-set="number" t-value="record.partner_id.number_sucursal" />
-          </t>
-          <t t-if="validtag == 2" >
-            <alternatePartyIdentification type="ASSIGNED_IDENTIFIER_FOR_A_BUYER"> </alternatePartyIdentification>
-          </t>
-          <t t-else="" >
-            <alternatePartyIdentification type="ASSIGNED_IDENTIFIER_FOR_A_BUYER" t-esc="str(identification)+str(number)" />
-          </t>-->
-          <t t-set="number" t-value="record.partner_shipping_id.shipping_number_store"/>
-          <alternatePartyIdentification type="ASSIGNED_IDENTIFIER_FOR_A_BUYER" t-esc="number"/>
-        </shipTo>
-        <currency t-att-currencyISOCode="record.currency_id.name">
-          <currencyFunction>BILLING_CURRENCY</currencyFunction>
-          <rateOfChange>1</rateOfChange>
-        </currency>
-        <t t-set="cont" t-value="0"/>
-        <t t-set="valprecre" t-value="0"/>
-        <t t-foreach="record.invoice_line_ids" t-as="rec">
-          <t t-foreach="xml.Conceptos.Concepto" t-as="rc">
-            <t t-if="rc.get('NoIdentificacion') == rec.product_id.barcode">
-              <t t-set="valprecre" t-value="rc.get('ValorUnitario')"/>
-            </t>
-          </t>
-          <t t-set="cont" t-value="cont + 1"/>
-          <lineItem type="SimpleInvoiceLineItemType" t-att-number="cont">
-            <tradeItemIdentification>
-              <gtin t-esc="rec.product_id.barcode"/>
-            </tradeItemIdentification>
-            <tradeItemDescriptionInformation language="ES">
-              <longText t-esc="rec.product_id.name"/>
-            </tradeItemDescriptionInformation>
-            <invoicedQuantity unitOfMeasure="CA" t-esc="'%.2f'% rec.quantity"/>
-            <aditionalQuantity QuantityType="NUM_CONSUMER_UNITS" unitOfMeasure="PCE" t-esc="rec.product_id.product_units"/>
-            <grossPrice>
-              <amount t-esc="'%.2f'% float(valprecre)"/>
-            </grossPrice>
-            <netPrice>
-              <amount t-esc="'%.2f'% float(valprecre)"/>
-            </netPrice>
-              <t t-set="amount" t-value="0"/>
-              <t t-foreach="rec.invoice_line_tax_ids" t-as="tac">
-                <t t-foreach="tac.tag_ids" t-as="tag">
-                  <t t-if="record.partner_id.show_ieps == False">
-                    <t t-if="tag.name != 'IEPS'">
-                      <t t-set="result" t-value="float(valprecre)"/>
-                      <t t-set="resultoper" t-value="result * (tac.amount / 100)"/>
-                      <t t-set="amount" t-value="amount + resultoper"/>
-                      <tradeItemTaxInformation>
-                        <taxTypeDescription>VAT</taxTypeDescription>
-                        <tradeItemTaxAmount>
-                          <taxPercentage t-esc="'%.2f'% tac.amount"/>
-                          <taxAmount t-esc="'%.2f'% amount"/>
-                        </tradeItemTaxAmount> 
-                      </tradeItemTaxInformation>
+    <data noupdate="0">
+        <template id="addenda_farmgdl" name="Farmacia Guadalajara codigo">
+            <t t-if="record.move_type == 'out_invoice'">
+                <t t-set="xml" t-value="record._get_values_addenda()"/>
+                <t t-set="dateformat" t-value="xml.get('cfdi_date')"/>
+                <requestForPayment xmlns="http://www.farmaciasguadalajara.com.mx/AddendaFragua" t-att-DeliveryDate="dateformat" type="SimpleInvoiceType" contentVersion="1.3.1" documentStructureVersion="AMC006" documentStatus="ORIGINAL">
+                    <requestForPaymentIdentification>
+                        <entityType>INVOICE</entityType>
+                        <t t-set="serie" t-value="xml.get('serie_number')"/>
+                        <t t-set="folio" t-value="xml.get('folio_number')"/>
+                        <uniqueCreatorIdentification t-esc="serie+folio"/>
+                    </requestForPaymentIdentification>
+                    <orderIdentification>
+                        <referenceIdentification type="ON" t-field="record.fields_sales.number_order"/>
+                    </orderIdentification>
+                    <buyer>
+                        <gln t-field="record.partner_shipping_id.shipping_gln"/>
+                        <contactInformation/>
+                    </buyer>
+                    <seller>
+                        <t t-set="numprov" t-value="record.partner_shipping_id.shipping_number_provider"/>
+                        <alternatePartyIdentification type="SELLER_ASSIGNED_IDENTIFIER_FOR_A_PARTY" t-esc="numprov"/>
+                    </seller>
+                    <shipTo>
+                        <t t-set="validtag" t-value="0"/>
+                        <t t-set="number" t-value="record.partner_shipping_id.shipping_number_store"/>
+                        <alternatePartyIdentification type="ASSIGNED_IDENTIFIER_FOR_A_BUYER" t-esc="number"/>
+                    </shipTo>
+                    <currency t-att-currencyISOCode="record.currency_id.name">
+                        <currencyFunction>BILLING_CURRENCY</currencyFunction>
+                        <rateOfChange>1</rateOfChange>
+                    </currency>
+                    <t t-set="cont" t-value="0"/>
+                    <t t-set="valprecre" t-value="0"/>
+                    <t t-foreach="record.invoice_line_ids" t-as="rec">
+                        <t t-foreach="xml.get('invoice_line_vals_list')" t-as="line_vals">
+                            <t t-set="line" t-value="line_vals['line']"/>
+                            <t t-if="line.product_id.default_code == rec.product_id.barcode">
+                                <t t-set="valprecre" t-value="line_vals['gross_price_total_unit']"/>
+                            </t>
+                        </t>
+                        <t t-set="cont" t-value="cont + 1"/>
+                        <lineItem type="SimpleInvoiceLineItemType" t-att-number="cont">
+                            <tradeItemIdentification>
+                                <gtin t-esc="rec.product_id.barcode"/>
+                            </tradeItemIdentification>
+                            <tradeItemDescriptionInformation language="ES">
+                                <longText t-esc="rec.product_id.name"/>
+                            </tradeItemDescriptionInformation>
+                            <invoicedQuantity unitOfMeasure="CA" t-esc="'%.2f'% rec.quantity"/>
+                            <aditionalQuantity QuantityType="NUM_CONSUMER_UNITS" unitOfMeasure="PCE" t-esc="rec.product_id.product_units"/>
+                            <grossPrice>
+                                <amount t-esc="'%.2f'% float(valprecre)"/>
+                            </grossPrice>
+                            <netPrice>
+                                <amount t-esc="'%.2f'% float(valprecre)"/>
+                            </netPrice>
+                            <t t-set="amount" t-value="0"/>
+                            <t t-foreach="rec.tax_ids" t-as="tac">
+                                <t t-foreach="tac.invoice_repartition_line_ids" t-as="irl">
+                                    <t t-foreach="irl.tag_ids" t-as="tag">
+                                        <!-- FIXME: Descomentar esta parte -->
+                                        <!-- <t t-if="record.partner_id.show_ieps == False">
+                                            <t t-if="tag.name != 'IEPS'">
+                                                <t t-set="result" t-value="float(valprecre)"/>
+                                                <t t-set="resultoper" t-value="result * (tac.amount / 100)"/>
+                                                <t t-set="amount" t-value="amount + resultoper"/>
+                                                <tradeItemTaxInformation>
+                                                    <taxTypeDescription>VAT</taxTypeDescription>
+                                                    <tradeItemTaxAmount>
+                                                        <taxPercentage t-esc="'%.2f'% tac.amount"/>
+                                                        <taxAmount t-esc="'%.2f'% amount"/>
+                                                    </tradeItemTaxAmount>
+                                                </tradeItemTaxInformation>
+                                            </t>
+                                        </t>
+                                        <t t-else="">
+                                            <t t-if="tag.name != 'IEPS'">
+                                                <t t-set="result" t-value="float(valprecre)"/>
+                                                <t t-set="resultoper" t-value="result * (tac.amount / 100)"/>
+                                                <t t-set="amount" t-value="amount + resultoper"/>
+                                                <tradeItemTaxInformation>
+                                                    <taxTypeDescription>VAT</taxTypeDescription>
+                                                    <tradeItemTaxAmount>
+                                                        <taxPercentage t-esc="'%.2f'% tac.amount"/>
+                                                        <taxAmount t-esc="'%.2f'% amount"/>
+                                                    </tradeItemTaxAmount>
+                                                </tradeItemTaxInformation>
+                                            </t>
+                                            <t t-else="">
+                                                <tradeItemTaxInformation>
+                                                    <taxTypeDescription>IEPS</taxTypeDescription>
+                                                    <tradeItemTaxAmount>
+                                                        <taxAmount t-esc="'%.2f'% tac.amount"/>
+                                                    </tradeItemTaxAmount>
+                                                </tradeItemTaxInformation>
+                                            </t>
+                                        </t> -->
+                                    </t>
+                                </t>
+                            </t>
+                            <totalLineAmount>
+                                <netAmount>
+                                    <amount t-esc="'%.2f'% float(rec.price_subtotal)"/>
+                                </netAmount>
+                            </totalLineAmount>
+                        </lineItem>
                     </t>
-                  </t>
-                  <t t-else="">
-                    <t t-if="tag.name != 'IEPS'">
-                      <t t-set="result" t-value="float(valprecre)"/>
-                      <t t-set="resultoper" t-value="result * (tac.amount / 100)"/>
-                      <t t-set="amount" t-value="amount + resultoper"/>
-                      <tradeItemTaxInformation>
-                        <taxTypeDescription>VAT</taxTypeDescription>
-                        <tradeItemTaxAmount>
-                          <taxPercentage t-esc="'%.2f'% tac.amount"/>
-                          <taxAmount t-esc="'%.2f'% amount"/>
-                        </tradeItemTaxAmount>
-                      </tradeItemTaxInformation>
-                    </t>
-                    <t t-else="">
-                      <tradeItemTaxInformation>
-                        <taxTypeDescription>IEPS</taxTypeDescription>
-                        <tradeItemTaxAmount>
-                          <taxAmount t-esc="'%.2f'% tac.amount"/>
-                        </tradeItemTaxAmount>
-                      </tradeItemTaxInformation>
-                    </t>
-                  </t>
-                </t>
-              </t>
-              <totalLineAmount>
-                <netAmount>
-                  <amount t-esc="'%.2f'% float(rec.price_subtotal)"/>
-                </netAmount>
-              </totalLineAmount>
-          </lineItem>
-        </t>
-        <TotalAllowanceCharge allowanceOrChargeType="ALLOWANCE">
-          <Amount>0.00</Amount>
-        </TotalAllowanceCharge>
-        <baseAmount>
-          <t t-set="valamount" t-value="0"/>
-          <t t-set="valprecrecd" t-value="0"/>
-          <t t-foreach="record.invoice_line_ids" t-as="rec">
-            <t t-foreach="xml.Conceptos.Concepto" t-as="rc">
-              <t t-if="rc.get('NoIdentificacion') == rec.product_id.barcode">
-                <t t-set="valprecrecd" t-value="rc.get('ValorUnitario')"/>
-              </t>
+                    <TotalAllowanceCharge allowanceOrChargeType="ALLOWANCE">
+                        <Amount>0.00</Amount>
+                    </TotalAllowanceCharge>
+                    <baseAmount>
+                        <t t-set="valamount" t-value="0"/>
+                        <t t-set="valprecrecd" t-value="0"/>
+                        <t t-foreach="record.invoice_line_ids" t-as="rec">
+                            <t t-foreach="xml.get('invoice_line_vals_list')" t-as="line_vals">
+                                <t t-set="line" t-value="line_vals['line']"/>
+                                <t t-if="line.product_id.default_code == rec.product_id.barcode">
+                                    <t t-set="valprecrecd" t-value="line_vals['gross_price_total_unit']"/>
+                                </t>
+                            </t>
+                            <t t-foreach="rec.tax_ids" t-as="tac">
+                                <t t-foreach="tac.invoice_repartition_line_ids" t-as="irl">
+                                    <t t-foreach="irl.tag_ids" t-as="tag">
+                                        <!-- FIXME: Descomentar esta parte -->
+                                        <!-- <t t-if="record.partner_id.show_ieps == False">
+                                            <t t-set="result" t-value="float(valprecrecd)"/>
+                                            <t t-set="resultoper" t-value="result * (tac.amount / 100)"/>
+                                            <t t-set="valamount" t-value="valamount + resultoper"/>
+                                        </t>
+                                        <t t-else="">
+                                            <t t-set="valieps" t-value="0"/>
+                                            <t t-if="tag.name != 'IEPS'">
+                                                <t t-set="result" t-value="float(valprecrecd)"/>
+                                                <t t-set="resultoper" t-value="result * (tac.amount / 100)"/>
+                                                <t t-set="valamount" t-value="valamount + resultoper"/>
+                                            </t>
+                                            <t t-if="tag.name == 'IEPS'">
+                                                <t t-set="valieps" t-value="tac.amount"/>
+                                            </t>
+                                            <t t-set="valamount" t-value="valamount + valieps"/>
+                                        </t> -->
+                                    </t>
+                                </t>
+                            </t>
+                        </t>
+                        <Amount t-esc="'%.2f'% valamount"/>
+                    </baseAmount>
+                    <payableAmount>
+                        <t t-set="amounttotal" t-value="'%.2f'% record.amount_total"/>
+                        <Amount t-esc="'%.2f'% record.amount_total"/>
+                    </payableAmount>
+                </requestForPayment>
             </t>
-            <t t-foreach="rec.invoice_line_tax_ids" t-as="tac">
-              <t t-foreach="tac.tag_ids" t-as="tag">
-                <t t-if="record.partner_id.show_ieps == False">
-                  <t t-set="result" t-value="float(valprecrecd)"/>
-                  <t t-set="resultoper" t-value="result * (tac.amount / 100)"/>
-                  <t t-set="valamount" t-value="valamount + resultoper"/>
-                </t>
-                <t t-else="">
-                  <t t-set="valieps" t-value="0"/>
-                  <t t-if="tag.name != 'IEPS'">
-                    <t t-set="result" t-value="float(valprecrecd)"/>
-                    <t t-set="resultoper" t-value="result * (tac.amount / 100)"/>
-                    <t t-set="valamount" t-value="valamount + resultoper"/>
-                  </t>
-                  <t t-if="tag.name == 'IEPS'">
-                    <t t-set="valieps" t-value="tac.amount"/>
-                  </t>
-                  <t t-set="valamount" t-value="valamount + valieps"/>
-                </t> 
-              </t>
+            <t t-else="">
+                <requestForPayment/>
             </t>
-          </t>
-          <Amount t-esc="'%.2f'% valamount"/>
-        </baseAmount>
-        <payableAmount>
-          <t t-set="amounttotal" t-value="'%.2f'% record.amount_total"/>
-          <Amount t-esc="'%.2f'% record.amount_total"/>
-        </payableAmount>
-      </requestForPayment>
-      </t>
-      <t t-else="">
-        <requestForPayment/>
-        </t>
-    </template>
-    <record id="addenda_farmgdl" model="ir.ui.view">
-      <field name="l10n_mx_edi_addenda_flag">True</field>
-    </record>
-  </data>
+        </template>
+        <record id="addenda_farmgdl" model="ir.ui.view">
+            <field name="l10n_mx_edi_addenda_flag">True</field>
+        </record>
+    </data>
 </odoo>
-  
