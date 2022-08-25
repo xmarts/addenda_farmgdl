@@ -4,6 +4,10 @@
         <template id="addenda_farmgdl" name="Farmacia Guadalajara codigo">
             <t t-if="record.move_type == 'out_invoice'">
                 <t t-set="xml" t-value="record._get_values_addenda()"/>
+                <t t-set="format_float" t-value="xml.get('format_float')"/>
+                <t t-set="format_string" t-value="xml.get('format_string')"/>
+                <t t-set="tax_objected" t-value="xml.get('tax_objected')"/>
+                <t t-set="currency_precision" t-value="xml.get('currency_precision')"/>
                 <t t-set="dateformat" t-value="xml.get('cfdi_date')"/>
                 <requestForPayment xmlns="http://www.farmaciasguadalajara.com.mx/AddendaFragua" t-att-DeliveryDate="dateformat" type="SimpleInvoiceType" contentVersion="1.3.1" documentStructureVersion="AMC006" documentStatus="ORIGINAL">
                     <requestForPaymentIdentification>
@@ -37,8 +41,8 @@
                     <t t-foreach="record.invoice_line_ids" t-as="rec">
                         <t t-foreach="xml.get('invoice_line_vals_list')" t-as="line_vals">
                             <t t-set="line" t-value="line_vals['line']"/>
-                            <t t-if="line.product_id.default_code == rec.product_id.barcode">
-                                <t t-set="valprecre" t-value="line_vals['gross_price_total_unit']"/>
+                            <t t-if="format_string(line.product_id.default_code) == rec.product_id.barcode">
+                                <t t-set="valprecre" t-value="format_float(line_vals['gross_price_total_unit'] if tax_objected == '02' else (line.price_total + line_vals['price_discount']) / line.quantity, currency_precision)"/>
                             </t>
                         </t>
                         <t t-set="cont" t-value="cont + 1"/>
@@ -117,8 +121,8 @@
                         <t t-foreach="record.invoice_line_ids" t-as="rec">
                             <t t-foreach="xml.get('invoice_line_vals_list')" t-as="line_vals">
                                 <t t-set="line" t-value="line_vals['line']"/>
-                                <t t-if="line.product_id.default_code == rec.product_id.barcode">
-                                    <t t-set="valprecrecd" t-value="line_vals['gross_price_total_unit']"/>
+                                <t t-if="format_string(line.product_id.default_code) == rec.product_id.barcode">
+                                    <t t-set="valprecrecd" t-value="format_float(line_vals['gross_price_total_unit'] if tax_objected == '02' else (line.price_total + line_vals['price_discount']) / line.quantity, currency_precision)"/>
                                 </t>
                             </t>
                             <t t-foreach="rec.tax_ids" t-as="tac">
