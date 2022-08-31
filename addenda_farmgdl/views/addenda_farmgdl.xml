@@ -42,7 +42,8 @@
                         <t t-foreach="xml.get('invoice_line_vals_list')" t-as="line_vals">
                             <t t-set="line" t-value="line_vals['line']"/>
                             <t t-if="format_string(line.product_id.default_code) == rec.product_id.barcode">
-                                <t t-set="valprecre" t-value="format_float(line_vals['gross_price_total_unit'] if tax_objected == '02' else (line.price_total + line_vals['price_discount']) / line.quantity, currency_precision)"/>
+                                <!-- <t t-set="valprecre" t-value="format_float(line_vals['gross_price_total_unit'] if tax_objected == '02' else (line.price_total + line_vals['price_discount']) / line.quantity, currency_precision)"/> -->
+                                <t t-set="valprecre" t-value="format_float(rec.price_unit, currency_precision)"/>
                             </t>
                         </t>
                         <t t-set="cont" t-value="cont + 1"/>
@@ -63,45 +64,48 @@
                             </netPrice>
                             <t t-set="amount" t-value="0"/>
                             <t t-foreach="rec.tax_ids" t-as="tac">
-                                <t t-foreach="tac.invoice_repartition_line_ids" t-as="irl">
-                                    <t t-foreach="irl.tag_ids" t-as="tag">
-                                        <!-- FIXME: Descomentar esta parte -->
-                                        <!-- <t t-if="record.partner_id.show_ieps == False">
-                                            <t t-if="tag.name != 'IEPS'">
-                                                <t t-set="result" t-value="float(valprecre)"/>
-                                                <t t-set="resultoper" t-value="result * (tac.amount / 100)"/>
-                                                <t t-set="amount" t-value="amount + resultoper"/>
-                                                <tradeItemTaxInformation>
-                                                    <taxTypeDescription>VAT</taxTypeDescription>
-                                                    <tradeItemTaxAmount>
-                                                        <taxPercentage t-esc="'%.2f'% tac.amount"/>
-                                                        <taxAmount t-esc="'%.2f'% amount"/>
-                                                    </tradeItemTaxAmount>
-                                                </tradeItemTaxInformation>
-                                            </t>
+                                <!-- FIXME: Revisar esta parte -->
+                                <t t-if="record.partner_id.show_ieps == False">
+                                    <t t-if="tac.ieps == False">
+                                        <t t-if="tac.amount != 0">
+                                            <t t-set="result" t-value="float(valprecre)"/>
+                                            <!-- <t t-set="resultoper" t-value="result * (tac.amount / 100)"/> -->
+                                            <t t-set="resultoper" t-value="(result/1.16)*0.16"/>
+                                            <t t-set="amount" t-value="amount + resultoper"/>
+                                            <tradeItemTaxInformation>
+                                                <taxTypeDescription>VAT</taxTypeDescription>
+                                                <tradeItemTaxAmount>
+                                                    <taxPercentage t-esc="'%.2f'% tac.amount"/>
+                                                    <taxAmount t-esc="'%.2f'% amount"/>
+                                                </tradeItemTaxAmount>
+                                            </tradeItemTaxInformation>
                                         </t>
-                                        <t t-else="">
-                                            <t t-if="tag.name != 'IEPS'">
-                                                <t t-set="result" t-value="float(valprecre)"/>
-                                                <t t-set="resultoper" t-value="result * (tac.amount / 100)"/>
-                                                <t t-set="amount" t-value="amount + resultoper"/>
-                                                <tradeItemTaxInformation>
-                                                    <taxTypeDescription>VAT</taxTypeDescription>
-                                                    <tradeItemTaxAmount>
-                                                        <taxPercentage t-esc="'%.2f'% tac.amount"/>
-                                                        <taxAmount t-esc="'%.2f'% amount"/>
-                                                    </tradeItemTaxAmount>
-                                                </tradeItemTaxInformation>
-                                            </t>
-                                            <t t-else="">
-                                                <tradeItemTaxInformation>
-                                                    <taxTypeDescription>IEPS</taxTypeDescription>
-                                                    <tradeItemTaxAmount>
-                                                        <taxAmount t-esc="'%.2f'% tac.amount"/>
-                                                    </tradeItemTaxAmount>
-                                                </tradeItemTaxInformation>
-                                            </t>
-                                        </t> -->
+                                    </t>
+                                </t>
+                                <t t-else="">
+                                    <t t-if="tac.ieps == False">
+                                        <t t-if="tac.amount != 0">
+                                            <t t-set="result" t-value="float(valprecre)"/>
+                                            <!-- <t t-set="resultoper" t-value="result * (tac.amount / 100)"/> -->
+                                            <t t-set="resultoper" t-value="(result/1.16)*0.16"/>
+                                            <t t-set="amount" t-value="amount + resultoper"/>
+                                            <tradeItemTaxInformation>
+                                                <taxTypeDescription>VAT</taxTypeDescription>
+                                                <tradeItemTaxAmount>
+                                                    <taxPercentage t-esc="'%.2f'% tac.amount"/>
+                                                    <taxAmount t-esc="'%.2f'% amount"/>
+                                                </tradeItemTaxAmount>
+                                            </tradeItemTaxInformation>
+                                        </t>
+                                    </t>
+                                    <t t-else="">
+                                        <tradeItemTaxInformation>
+                                            <taxTypeDescription>IEPS</taxTypeDescription>
+                                            <tradeItemTaxAmount>
+                                                <!-- <taxAmount t-esc="'%.2f'% tac.amount"/> -->
+                                                <taxAmount t-esc="'%.2f'% 0"/>
+                                            </tradeItemTaxAmount>
+                                        </tradeItemTaxInformation>
                                     </t>
                                 </t>
                             </t>
@@ -122,31 +126,32 @@
                             <t t-foreach="xml.get('invoice_line_vals_list')" t-as="line_vals">
                                 <t t-set="line" t-value="line_vals['line']"/>
                                 <t t-if="format_string(line.product_id.default_code) == rec.product_id.barcode">
-                                    <t t-set="valprecrecd" t-value="format_float(line_vals['gross_price_total_unit'] if tax_objected == '02' else (line.price_total + line_vals['price_discount']) / line.quantity, currency_precision)"/>
+                                    <!-- <t t-set="valprecrecd" t-value="format_float(line_vals['gross_price_total_unit'] if tax_objected == '02' else (line.price_total + line_vals['price_discount']) / line.quantity, currency_precision)"/> -->
+                                    <t t-set="valprecrecd" t-value="format_float(rec.price_unit, currency_precision)"/>
                                 </t>
                             </t>
                             <t t-foreach="rec.tax_ids" t-as="tac">
-                                <t t-foreach="tac.invoice_repartition_line_ids" t-as="irl">
-                                    <t t-foreach="irl.tag_ids" t-as="tag">
-                                        <!-- FIXME: Descomentar esta parte -->
-                                        <!-- <t t-if="record.partner_id.show_ieps == False">
+                                <!-- FIXME: Revisar esta parte -->
+                                <t t-if="record.partner_id.show_ieps == False">
+                                    <t t-set="result" t-value="float(valprecrecd)"/>
+                                    <!-- <t t-set="resultoper" t-value="result * (tac.amount / 100)"/> -->
+                                    <t t-set="resultoper" t-value="(rec.quantity * result/1.16)*0.16"/>
+                                    <t t-set="valamount" t-value="valamount + resultoper"/>
+                                </t>
+                                <t t-else="">
+                                    <t t-set="valieps" t-value="0"/>
+                                    <t t-if="tac.ieps == False">
+                                        <t t-if="tac.amount != 0">
                                             <t t-set="result" t-value="float(valprecrecd)"/>
-                                            <t t-set="resultoper" t-value="result * (tac.amount / 100)"/>
+                                            <!-- <t t-set="resultoper" t-value="result * (tac.amount / 100)"/> -->
+                                            <t t-set="resultoper" t-value="(rec.quantity * result/1.16)*0.16"/>
                                             <t t-set="valamount" t-value="valamount + resultoper"/>
                                         </t>
-                                        <t t-else="">
-                                            <t t-set="valieps" t-value="0"/>
-                                            <t t-if="tag.name != 'IEPS'">
-                                                <t t-set="result" t-value="float(valprecrecd)"/>
-                                                <t t-set="resultoper" t-value="result * (tac.amount / 100)"/>
-                                                <t t-set="valamount" t-value="valamount + resultoper"/>
-                                            </t>
-                                            <t t-if="tag.name == 'IEPS'">
-                                                <t t-set="valieps" t-value="tac.amount"/>
-                                            </t>
-                                            <t t-set="valamount" t-value="valamount + valieps"/>
-                                        </t> -->
                                     </t>
+                                    <t t-if="tac.ieps == True">
+                                        <t t-set="valieps" t-value="tac.amount"/>
+                                    </t>
+                                    <t t-set="valamount" t-value="valamount + valieps"/>
                                 </t>
                             </t>
                         </t>
